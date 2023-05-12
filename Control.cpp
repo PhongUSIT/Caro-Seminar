@@ -3,6 +3,8 @@
 #include <string>
 #include <conio.h>
 #include <iostream>
+#include <vector>
+#include <fstream>
 using namespace std;
 
 #define BOARD_SIZE 12 //Kích thước ma trận bàn cờ
@@ -47,6 +49,8 @@ void Draw_newgame_opt(int x, int y, int w, int h);
 void Highlight_Play_turn(int x, int y, int w, int h, int color, int player);
 void DrawBoard(int pSize);
 void DrawTurn(int x, int y, int w, int h);
+void PrintText(string text, int color, int x, int y);
+void DrawLoaded(_POINT _A[][BOARD_SIZE]);
 //Hàm Control
 void ExitGame();
 void MoveRight();
@@ -61,7 +65,12 @@ int CheckBoard(int pX, int pY);
 int TestBoard();
 void ResetData();
 int Bot(int _X, int _Y, int& pX, int& pY);
-
+int Bot(int _X, int _Y, int& pX, int& pY);
+void Play();
+void SaveData(string filename);
+void LoadData(string filename);
+vector<string> LoadFiles();
+bool CheckFileExistence(string filename);
 /*Hàm dọn dẹp tài nguyên*/
 void StartGame()
 {
@@ -141,6 +150,47 @@ void MenuDown(int& o, int n)
 		o++;
 	}
 }
+
+void SaveGame() {
+	string filename;
+
+	system("cls");
+	system("color F0");
+	do {
+		PrintText("Nhap file name ban muon luu: ", 15, 40, 15);
+		getline(cin, filename);
+		filename += ".txt";
+		if (!CheckFileExistence(filename)) {
+			break;
+		}
+		else {
+			PrintText("Nhap lai ten khac: ", 15, 40, 17);
+		}
+	} while (1);
+	
+	SaveData(filename);
+
+	ofstream savedfile;
+	
+		savedfile.open("gamelist.txt", ios::app);
+		savedfile << filename << endl;
+		savedfile.close();
+}
+
+void LoadGame(string filename) {
+	system("cls");
+	system("color F0");
+
+	LoadData(filename);
+	DrawBox(55, 19, 60, 8);
+	DrawTurn(55, _A[0][BOARD_SIZE - 1].y, 60, 12);
+	DrawOption(_A[0][0].x - 2, _A[BOARD_SIZE - 1][BOARD_SIZE - 1].y + 2, 10, 2, 15, 0, "M:MENU");
+	DrawOption(_A[0][BOARD_SIZE - 1].x - 12, _A[BOARD_SIZE - 1][BOARD_SIZE - 1].y + 2, 14, 2, 15, 0, "L:SAVE GAME");
+	DrawBoard(BOARD_SIZE);
+	GotoXY(_X, _Y);
+}
+
+
 
 //GamePlay của PvP
 void PlayPvP()
@@ -368,6 +418,10 @@ void PlayPvP()
 				}
 				validEnter = true; //Mở khóa
 			}
+else if(_COMMAND == 'L'){
+SaveGame();
+Play();
+}
 		}
 	}
 }
