@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <conio.h>
 #include <time.h>
+#include <fstream>
+#include <vector>
 using namespace std;
 
 #define BOARD_SIZE 12 //Kích thước ma trận bàn cờ
@@ -18,6 +20,13 @@ extern _POINT _A[BOARD_SIZE][BOARD_SIZE]; //Ma trận bàn cờ
 extern bool _TURN; //true là lượt người thứ nhất và false là lượt người thứ hai
 extern int _COMMAND; //Biến nhận giá trị phím người dùng nhập
 extern int _X, _Y; //Tọa độ hiện hành trên màn hình bàn cờ
+
+struct Player
+{
+	string name;
+	int score;
+};
+
 extern struct MENU
 {
 	string opt1;
@@ -43,13 +52,19 @@ void DrawMenu(int x, int y, int w, int h, MENU m);
 void DrawAbout();
 void printLogo();
 void Highlight_win();
+void PrintText(string text, int color, int x, int y);
+void DrawBoard(int pSize);
+void DrawTurn(int x, int y, int w, int h);
+void DrawBox(int x, int y, int w, int h);
+void DrawLoaded(_POINT _A[][BOARD_SIZE]);
 //nhom ham control
 void MenuUp(int& o);
 void MenuDown(int& o, int n);
 void StartGame();
 void PlayPvP();
 void PlayPvC();
-
+void SaveGame();
+void LoadGame(string filename);
 
 /*Hàm khởi tạo dữ liệu mặc định ban đầu cho ma trận bàn cờ*/
 void ResetGame()
@@ -929,6 +944,97 @@ void Newgame_opt()
 			GotoXY(_X, _Y);
 		}
 	}
+}
+
+
+void SaveData(string filename) {
+	ofstream savefile;
+	savefile.open(filename, ios::out);
+
+	savefile << Player1_name << endl;
+	savefile << Score1 << endl;
+	savefile << Player2_name << endl;
+	savefile << Score2 << endl;
+
+	savefile << _TURN << endl;
+
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		for (int j = 0; j < BOARD_SIZE; j++) {
+			savefile << _A[i][j].c << " ";
+		}
+		savefile << endl;
+	}
+	savefile.close();
+}
+
+void LoadData(string filename) {
+	ifstream loadfile;
+	int turn;
+	Player P[2];
+	loadfile.open(filename, ios::in);
+	for (int i = 0; i < 2; i++) {
+		string name = "";
+		int score = 0;
+		loadfile.ignore();
+		getline(loadfile,name);
+		loadfile >>score;
+		P[i].name = name;
+		P[i].score = score;
+	}
+	loadfile >> turn;
+	for (int i = 0; i < BOARD_SIZE; i++) {
+		for (int j = 0; j < BOARD_SIZE; j++) {
+			int x = 0;
+			loadfile >> x;
+			_A[i][j].x = 4 * j + LEFT + 2; //Trung voi hoanh do ban co
+			_A[i][j].y = 2 * i + TOP + 1; //Trung voi tung do ban co
+			_A[i][j].c = x;
+		}
+	}
+	Player1_name = P[0].name;
+	Score1 = P[0].score;
+	Player2_name = P[1].name;
+	Score2 = P[1].score;
+	_TURN = turn;
+
+	loadfile.close();
+
+	_COMMAND = -1;
+	_X = _A[0][0].x;
+	_Y = _A[0][0].y;
+}
+
+vector<string> LoadFiles()
+{
+	vector<string> files;
+	string filename;
+
+	ifstream savedFile;
+	savedFile.open("gamelist.txt", fstream::in);
+
+	while (savedFile >> filename)
+	{
+		files.push_back(filename);
+	}
+	savedFile.close();
+
+	return files;
+}
+
+bool CheckFileExistence(string filename) {
+	string name;
+
+	ifstream savedfile;
+	savedfile.open("gamelist.txt", ios::in);
+
+	while (savedfile >> name) {
+		if (name == filename) {
+			savedfile.close();
+			return true;
+		}
+	}
+	savedfile.close();
+	return false;
 }
 
 void Play()
